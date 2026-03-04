@@ -410,16 +410,106 @@ export default function Portfolio() {
           gap: 0.4rem;
           transition: all 0.2s;
           user-select: none;
+          white-space: nowrap;
         }
         .theme-toggle:hover {
           background: ${t.accentBorder};
+        }
+
+        /* ── RESPONSIVE ── */
+
+        /* Hamburger */
+        .hamburger {
+          display: none;
+          flex-direction: column;
+          gap: 5px;
+          cursor: pointer;
+          background: none;
+          border: none;
+          padding: 4px;
+          z-index: 110;
+        }
+        .hamburger span {
+          display: block;
+          width: 22px;
+          height: 2px;
+          background: ${t.accent};
+          border-radius: 2px;
+          transition: all 0.3s;
+        }
+
+        /* Desktop nav links */
+        .desktop-nav { display: flex; gap: 2rem; align-items: center; }
+
+        /* Mobile drawer */
+        .mobile-menu {
+          display: none;
+          position: fixed;
+          top: 64px; left: 0; right: 0;
+          background: ${t.navBg};
+          backdrop-filter: blur(20px);
+          border-bottom: 1px solid ${t.accentBorder};
+          flex-direction: column;
+          padding: 1.5rem 2rem;
+          gap: 0;
+          z-index: 99;
+        }
+        .mobile-menu.open { display: flex; }
+        .mobile-menu button {
+          background: none; border: none;
+          color: ${t.textMuted};
+          cursor: pointer;
+          font-family: 'DM Mono', monospace;
+          font-size: 0.85rem;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          padding: 0.9rem 0;
+          text-align: left;
+          border-bottom: 1px solid ${t.border};
+          width: 100%;
+        }
+        .mobile-menu button:last-child { border-bottom: none; }
+
+        /* Tablet ≤ 900px */
+        @media (max-width: 900px) {
+          .desktop-nav { display: none; }
+          .hamburger { display: flex; }
+
+          .about-grid { grid-template-columns: 1fr !important; gap: 2.5rem !important; }
+          .contact-grid { grid-template-columns: 1fr !important; gap: 2rem !important; }
+
+          .floating-code { display: none !important; }
+
+          .skills-row { flex-direction: column !important; gap: 0.5rem !important; }
+          .skills-label { min-width: unset !important; }
+        }
+
+        /* Mobile ≤ 600px */
+        @media (max-width: 600px) {
+          .hero-section { padding: 5rem 1.2rem 2rem !important; }
+          .section-pad { padding: 5rem 1.2rem !important; }
+          .section-pad-alt { padding: 5rem 1.2rem !important; }
+
+          .hero-stats { gap: 1.5rem !important; }
+          .hero-buttons { flex-direction: column !important; align-items: center !important; }
+          .hero-buttons a, .hero-buttons button { width: 100% !important; text-align: center !important; }
+
+          .project-grid { grid-template-columns: 1fr !important; }
+          .info-grid { grid-template-columns: 1fr !important; }
+
+          .edu-header { flex-direction: column !important; align-items: flex-start !important; gap: 0.4rem !important; }
+
+          .exp-card { padding: 1.2rem !important; }
+          .exp-header { flex-direction: column !important; align-items: flex-start !important; gap: 0.4rem !important; }
+
+          .about-heading { white-space: normal !important; font-size: clamp(2rem, 8vw, 3rem) !important; }
         }
       `}</style>
 
       {/* NAVBAR */}
       <nav style={{
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
-        padding: "0 2rem",
+        padding: "0 1.5rem",
         background: scrolled ? t.navBg : "transparent",
         backdropFilter: scrolled ? "blur(20px)" : "none",
         borderBottom: scrolled ? `1px solid ${t.accentBorder}` : "none",
@@ -430,7 +520,9 @@ export default function Portfolio() {
         <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "1.4rem", letterSpacing: "0.15em", color: t.accent, userSelect: "none", cursor: "default" }}>
           HRY
         </div>
-        <div style={{ display: "flex", gap: "2rem", alignItems: "center" }}>
+
+        {/* Desktop nav */}
+        <div className="desktop-nav">
           {NAV_LINKS.map(link => (
             <button key={link} onClick={() => scrollTo(link.toLowerCase())}
               className="nav-link"
@@ -438,25 +530,50 @@ export default function Portfolio() {
               {link}
             </button>
           ))}
-          {/* Theme Toggle */}
           <button className="theme-toggle" onClick={() => setDark(d => !d)}>
             {dark ? "☀ Light" : "🌙 Dark"}
           </button>
         </div>
+
+        {/* Hamburger (mobile) */}
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+          <button className="theme-toggle" onClick={() => setDark(d => !d)} style={{ display: "none" }} id="mobile-theme-toggle">
+            {dark ? "☀" : "🌙"}
+          </button>
+          <button className="hamburger" onClick={() => setMenuOpen(m => !m)} aria-label="Menu">
+            <span style={{ transform: menuOpen ? "rotate(45deg) translate(5px, 5px)" : "none" }} />
+            <span style={{ opacity: menuOpen ? 0 : 1 }} />
+            <span style={{ transform: menuOpen ? "rotate(-45deg) translate(5px, -5px)" : "none" }} />
+          </button>
+        </div>
       </nav>
 
+      {/* Mobile menu drawer */}
+      <div className={`mobile-menu ${menuOpen ? "open" : ""}`}>
+        {NAV_LINKS.map(link => (
+          <button key={link} onClick={() => scrollTo(link.toLowerCase())}>
+            {link}
+          </button>
+        ))}
+        <div style={{ paddingTop: "1rem" }}>
+          <button className="theme-toggle" onClick={() => { setDark(d => !d); setMenuOpen(false); }} style={{ width: "100%", justifyContent: "center", borderRadius: "4px" }}>
+            {dark ? "☀ Switch to Light" : "🌙 Switch to Dark"}
+          </button>
+        </div>
+      </div>
+
       {/* HERO */}
-      <section id="hero" className="grid-bg noise-bg" style={{
+      <section id="hero" className="grid-bg noise-bg hero-section" style={{
         minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
         position: "relative", overflow: "hidden", padding: "6rem 2rem 2rem",
       }}>
         <div style={{ position: "absolute", top: "20%", right: "10%", width: "400px", height: "400px", borderRadius: "50%", background: `radial-gradient(circle, ${t.orb1} 0%, transparent 70%)`, pointerEvents: "none" }} />
         <div style={{ position: "absolute", bottom: "15%", left: "5%", width: "300px", height: "300px", borderRadius: "50%", background: `radial-gradient(circle, ${t.orb2} 0%, transparent 70%)`, pointerEvents: "none" }} />
 
-        <div className="floating" style={{ position: "absolute", top: "15%", left: "3%", fontSize: "0.65rem", color: t.codeColor1, fontFamily: "monospace", lineHeight: 1.8, userSelect: "none" }}>
+        <div className="floating floating-code" style={{ position: "absolute", top: "15%", left: "3%", fontSize: "0.65rem", color: t.codeColor1, fontFamily: "monospace", lineHeight: 1.8, userSelect: "none" }}>
           {`@RestController\npublic class ApiController {\n  @GetMapping("/api")\n  public Response get() {\n    return service.fetch();\n  }\n}`}
         </div>
-        <div className="floating" style={{ position: "absolute", bottom: "20%", right: "3%", fontSize: "0.65rem", color: t.codeColor2, fontFamily: "monospace", lineHeight: 1.8, userSelect: "none", animationDelay: "3s" }}>
+        <div className="floating floating-code" style={{ position: "absolute", bottom: "20%", right: "3%", fontSize: "0.65rem", color: t.codeColor2, fontFamily: "monospace", lineHeight: 1.8, userSelect: "none", animationDelay: "3s" }}>
           {`const App = () => {\n  const [data] = useState();\n  return (\n    <div className="app">\n      {data.map(render)}\n    </div>\n  );\n}`}
         </div>
 
@@ -464,9 +581,8 @@ export default function Portfolio() {
           <div style={{ fontSize: "0.7rem", letterSpacing: "0.3em", color: t.accent, marginBottom: "1.5rem", textTransform: "uppercase" }}>
             ◆ Available for opportunities ◆
           </div>
-          <h1 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "clamp(3.5rem, 10vw, 8rem)", lineHeight: 0.95, letterSpacing: "0.05em", marginBottom: "1rem" }}>
-            <span style={{ display: "block", color: t.text }}>HEMANT</span>
-            <span className="glow-text" style={{ display: "block", color: t.accent }}>RAM YADAV</span>
+          <h1 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "clamp(2.5rem, 8vw, 7rem)", lineHeight: 0.95, letterSpacing: "0.05em", marginBottom: "1rem", whiteSpace: "nowrap" }}>
+            <span className="glow-text" style={{ display: "block", color: dark ? "#ffffff" : t.accent }}>HEMANT RAM YADAV</span>
           </h1>
 
           <div style={{ fontSize: "clamp(1rem, 2.5vw, 1.4rem)", color: t.textMuted, margin: "1.5rem 0", minHeight: "2em" }}>
@@ -477,7 +593,7 @@ export default function Portfolio() {
             Building scalable backend systems and modern web applications using Java, Spring Boot, and React. Pune, Maharashtra.
           </p>
 
-          <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
+          <div className="hero-buttons" style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
             <button className="btn-primary" onClick={() => scrollTo("projects")} style={{ padding: "0.85rem 2rem", fontSize: "0.75rem", letterSpacing: "0.1em", textTransform: "uppercase", borderRadius: "2px" }}>
               View Projects →
             </button>
@@ -491,9 +607,9 @@ export default function Portfolio() {
             </button>
           </div>
 
-          <div style={{ display: "flex", gap: "3rem", justifyContent: "center", marginTop: "5rem", paddingTop: "3rem", borderTop: `1px solid ${t.border}` }}>
+          <div className="hero-stats" style={{ display: "flex", gap: "3rem", justifyContent: "center", marginTop: "5rem", paddingTop: "3rem", borderTop: `1px solid ${t.border}`, flexWrap: "wrap" }}>
             {[
-              { label: "Projects Built", value: 3 },
+              { label: "Projects Built", value: 5 },
               { label: "Internships", value: 2 },
               { label: "Tech Skills", value: 15 },
             ].map(stat => (
@@ -514,12 +630,12 @@ export default function Portfolio() {
       </section>
 
       {/* ABOUT */}
-      <section id="about" style={{ padding: "8rem 2rem", maxWidth: "1100px", margin: "0 auto" }}>
+      <section id="about" className="section-pad" style={{ padding: "8rem 2rem", maxWidth: "1100px", margin: "0 auto" }}>
         <RevealSection>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "5rem", alignItems: "center" }}>
+          <div className="about-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "5rem", alignItems: "center" }}>
             <div>
               <div style={{ fontSize: "0.65rem", letterSpacing: "0.3em", color: t.accent, textTransform: "uppercase", marginBottom: "1rem" }}>// 01. About</div>
-              <h2 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "clamp(2rem, 4vw, 3.5rem)", letterSpacing: "0.05em", lineHeight: 1, marginBottom: "2rem", color: t.text, whiteSpace: "nowrap" }}>
+              <h2 className="about-heading" style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "clamp(2rem, 4vw, 3.5rem)", letterSpacing: "0.05em", lineHeight: 1, marginBottom: "2rem", color: t.text, whiteSpace: "nowrap" }}>
                 WHO AM <span style={{ color: t.accent }}>I?</span>
               </h2>
               <div style={{ width: "60px", height: "2px", background: t.accent, marginBottom: "2rem" }} />
@@ -572,7 +688,7 @@ export default function Portfolio() {
       </section>
 
       {/* EXPERIENCE */}
-      <section id="experience" style={{ padding: "8rem 2rem", background: t.bgAlt, borderTop: `1px solid ${t.border}`, borderBottom: `1px solid ${t.border}` }}>
+      <section id="experience" className="section-pad" style={{ padding: "8rem 2rem", background: t.bgAlt, borderTop: `1px solid ${t.border}`, borderBottom: `1px solid ${t.border}` }}>
         <div style={{ maxWidth: "800px", margin: "0 auto" }}>
           <RevealSection>
             <div style={{ marginBottom: "4rem" }}>
@@ -599,14 +715,14 @@ export default function Portfolio() {
                       {exp.current ? "●" : "○"}
                     </div>
                   </div>
-                  <div style={{
+                  <div className="exp-card" style={{
                     flex: 1, padding: "1.5rem 2rem",
                     background: t.card,
                     border: `1px solid ${exp.current ? t.accentBorder : t.border}`,
                     borderRadius: "4px",
                     borderLeft: `2px solid ${exp.current ? t.accent : t.border}`,
                   }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "0.5rem", marginBottom: "0.75rem" }}>
+                    <div className="exp-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "0.5rem", marginBottom: "0.75rem" }}>
                       <div>
                         <h3 style={{ fontSize: "1rem", fontWeight: 500, color: exp.current ? t.accent : t.text, marginBottom: "0.25rem" }}>{exp.role}</h3>
                         <div style={{ fontSize: "0.8rem", color: t.textMuted }}>{exp.company}</div>
@@ -633,7 +749,7 @@ export default function Portfolio() {
       </section>
 
       {/* SKILLS */}
-      <section id="skills" style={{ padding: "8rem 2rem", borderTop: `1px solid ${t.border}`, borderBottom: `1px solid ${t.border}` }}>
+      <section id="skills" className="section-pad" style={{ padding: "8rem 2rem", borderTop: `1px solid ${t.border}`, borderBottom: `1px solid ${t.border}` }}>
         <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
           <RevealSection>
             <div style={{ marginBottom: "4rem" }}>
@@ -655,12 +771,12 @@ export default function Portfolio() {
             { label: "Soft Skills",  items: ["Problem Solving", "Communication", "Teamwork", "Time Management"] },
           ].map((row, i) => (
             <RevealSection key={row.label} delay={i * 60}>
-              <div style={{
+              <div className="skills-row" style={{
                 display: "flex", alignItems: "flex-start", gap: "2rem",
                 padding: "1.25rem 0",
                 borderBottom: `1px solid ${t.border}`,
               }}>
-                <div style={{ minWidth: "130px", paddingTop: "0.3rem" }}>
+                <div className="skills-label" style={{ minWidth: "130px", paddingTop: "0.3rem" }}>
                   <span style={{ fontSize: "0.62rem", letterSpacing: "0.18em", color: t.accent, textTransform: "uppercase" }}>
                     {row.label}
                   </span>
@@ -688,7 +804,7 @@ export default function Portfolio() {
           ))}
 
           <RevealSection delay={500}>
-            <div style={{ marginTop: "3rem", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1rem" }}>
+            <div className="info-grid" style={{ marginTop: "3rem", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "1rem" }}>
               {[
                 { title: "OpenKM", desc: "Open-source Document Management System for storing, organizing, and retrieving digital documents. Supports workflows, version control, metadata tagging, and role-based access control." },
                 { title: "OCR — Optical Character Recognition", desc: "Converts printed or typed text in scanned images and PDFs into machine-readable digital text. Used in document digitization, data extraction, and automated processing pipelines." },
@@ -711,7 +827,7 @@ export default function Portfolio() {
       </section>
 
       {/* PROJECTS */}
-      <section id="projects" style={{ padding: "8rem 2rem", background: t.bgAlt, borderTop: `1px solid ${t.border}`, borderBottom: `1px solid ${t.border}` }}>
+      <section id="projects" className="section-pad" style={{ padding: "8rem 2rem", background: t.bgAlt, borderTop: `1px solid ${t.border}`, borderBottom: `1px solid ${t.border}` }}>
         <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
           <RevealSection>
             <div style={{ marginBottom: "4rem" }}>
@@ -721,7 +837,7 @@ export default function Portfolio() {
               </h2>
             </div>
           </RevealSection>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "1.5rem" }}>
+          <div className="project-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1.5rem" }}>
             {PROJECTS.map((proj, i) => (
               <RevealSection key={proj.title} delay={i * 120}>
                 <div className="project-card" style={{
@@ -771,7 +887,7 @@ export default function Portfolio() {
       </section>
 
       {/* EDUCATION */}
-      <section id="education" style={{ padding: "8rem 2rem" }}>
+      <section id="education" className="section-pad" style={{ padding: "8rem 2rem" }}>
         <div style={{ maxWidth: "800px", margin: "0 auto" }}>
           <RevealSection>
             <div style={{ marginBottom: "4rem" }}>
@@ -798,7 +914,7 @@ export default function Portfolio() {
               }}>
                 <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: "2px", background: i < 2 ? t.accent : t.accentBorder, borderRadius: "0 0 0 4px" }} />
                 <div style={{ flex: 1 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "0.5rem", marginBottom: "0.5rem" }}>
+                  <div className="edu-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "0.5rem", marginBottom: "0.5rem" }}>
                     <h3 style={{ fontSize: "0.95rem", color: t.text, fontWeight: 500 }}>{edu.degree}</h3>
                     <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
                       <span style={{ padding: "0.2rem 0.6rem", fontSize: "0.58rem", letterSpacing: "0.1em", background: t.accentDim, border: `1px solid ${t.accentBorder}`, color: t.accent, borderRadius: "2px", textTransform: "uppercase" }}>{edu.badge}</span>
@@ -815,7 +931,7 @@ export default function Portfolio() {
       </section>
 
       {/* CONTACT */}
-      <section id="contact" style={{ padding: "8rem 2rem", background: t.bgAlt, borderTop: `1px solid ${t.border}` }}>
+      <section id="contact" className="section-pad" style={{ padding: "8rem 2rem", background: t.bgAlt, borderTop: `1px solid ${t.border}` }}>
         <div style={{ maxWidth: "900px", margin: "0 auto" }}>
           <RevealSection>
             <div style={{ marginBottom: "4rem", textAlign: "center" }}>
@@ -828,7 +944,7 @@ export default function Portfolio() {
               </p>
             </div>
           </RevealSection>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4rem" }}>
+          <div className="contact-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4rem" }}>
             <RevealSection>
               <div>
                 {[
